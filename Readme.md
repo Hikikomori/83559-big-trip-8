@@ -1,7 +1,7 @@
 # Личный проект «Большое путешествие» [![Build status][travis-image]][travis-url]
 
 * Студент: [Максим Прусаков](https://up.htmlacademy.ru/ecmascript/8/user/83559).
-* Наставник: `Неизвестно`.
+* Наставник: [Евгений Фаллер](https://up.htmlacademy.ru/ecmascript/8/user/505933).
 
 ---
 
