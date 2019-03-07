@@ -1,6 +1,8 @@
 import makeFilter from './make-filter.js';
-import makePoint from './make-point.js';
 import pointData from './generate-point-data.js';
+
+import Point from './point.js';
+import PointEdit from './point-edit.js';
 
 const INITIAL_POINT_COUNT = 7;
 const MIN_RANDOM_POINT_COUNT = 1;
@@ -11,7 +13,30 @@ const pointsContainer = document.querySelector(`.trip-day__items`);
 const getRandomPointsValue = () => Math.round(Math.random() * MAX_RANDOM_POINT_COUNT + MIN_RANDOM_POINT_COUNT);
 const filtersData = [{name: `Everything`, isChecked: true}, {name: `Future`, isChecked: false}, {name: `Past`, isChecked: false}];
 
-const generatePoint = () => makePoint(pointData());
+const generatePoints = (fragment) => {
+  let data = pointData();
+  let point = new Point(data);
+  let pointEdit = new PointEdit(data);
+
+  fragment.appendChild(point.render());
+  point.onClick = () => {
+    pointEdit.render();
+    pointsContainer.replaceChild(pointEdit.element, point.element);
+    point.unrender();
+  };
+
+  pointEdit.onSubmit = () => {
+    point.render();
+    pointsContainer.replaceChild(point.element, pointEdit.element);
+    pointEdit.unrender();
+  };
+
+  pointEdit.onReset = () => {
+    point.render();
+    pointsContainer.replaceChild(point.element, pointEdit.element);
+    pointEdit.unrender();
+  };
+};
 
 const filters = filtersData.map((filter) => {
   return makeFilter(filter.name, filter.isChecked);
@@ -24,18 +49,16 @@ const filterElements = filterContainer.querySelectorAll(`.trip-filter__item`);
 for (let filter of filterElements) {
   filter.addEventListener(`click`, () => {
     pointsContainer.innerHTML = ``;
-    let points = [];
+    let points = document.createDocumentFragment();
     for (let i = 1; i <= getRandomPointsValue(); i++) {
-      points.push(generatePoint());
+      generatePoints(points);
     }
-    pointsContainer.insertAdjacentHTML(`beforeend`, points.join(``));
+    pointsContainer.appendChild(points);
   });
 }
 
-let points = [];
+let points = document.createDocumentFragment();
 for (let i = 1; i <= INITIAL_POINT_COUNT; i++) {
-  points.push(generatePoint());
+  generatePoints(points);
 }
-pointsContainer.insertAdjacentHTML(`beforeend`, points.join(``));
-
-
+pointsContainer.appendChild(points);
