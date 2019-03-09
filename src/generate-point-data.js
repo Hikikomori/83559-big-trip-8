@@ -1,6 +1,6 @@
 const TYPES = [`Taxi`, `Bus`, `Train`, `Ship`, `Transport`, `Drive`, `Flight`, `Check-in`, `Sightseeing`, `Restaurant`];
 const CITIES = [`Amsterdam`, `Geneva`, `Chamonix`];
-const OFFERS = [{title: `Add luggage`, price: 30}, {title: `Switch to comfort class`, price: 100}, {title: `Add meal`, price: 15}, {title: `Choose seats`, price: 5}, {title: `Travel by train`, price: 40}];
+const OFFERS = [{value: `add-luggage`, title: `Add luggage`, price: 30}, {value: `switch-to-comfort-class`, title: `Switch to comfort class`, price: 100}, {value: `add-meal`, title: `Add meal`, price: 15}, {value: `choose-seats`, title: `Choose seats`, price: 5}, {value: `travel-by-train`, title: `Travel by train`, price: 40}];
 const DESCRIPTIONS = [
   `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`,
   `Fusce tristique felis at fermentum pharetra.`,
@@ -14,6 +14,7 @@ const DESCRIPTIONS = [
 ];
 const MILLISECONDS_IN_DAY = 86400000;
 const MAX_OFFERS_VALUE = 3;
+const MAX_PICTURES_COUNT = 5;
 const MIN_DESCRIPTION_SENTENCES = 1;
 const MAX_DESCRIPTION_SENTENCES = 3;
 const MIN_PRICE = 20;
@@ -41,10 +42,20 @@ const arrayRandomJoin = (arr, length = arr.length) => {
   return newArr.join(` `);
 };
 
+const generatePictures = () => {
+  let pictures = [];
+
+  for (let i = Math.floor(Math.random() * MAX_PICTURES_COUNT); i < MAX_PICTURES_COUNT; i++) {
+    pictures.push(`http://picsum.photos/300/150?r=${Math.random()}`);
+  }
+
+  return pictures;
+};
+
 export default () => ({
   type: getRandomArrElem(TYPES),
   city: getRandomArrElem(CITIES),
-  picture: `//picsum.photos/300/150?r=${Math.random()}`,
+  pictures: generatePictures(),
   offers: Array.from(arrayToSet(OFFERS, Math.floor(Math.random() * MAX_OFFERS_VALUE))),
   description: arrayRandomJoin(DESCRIPTIONS, Math.floor(Math.random() * MAX_DESCRIPTION_SENTENCES) + MIN_DESCRIPTION_SENTENCES),
   startDate: Date.now(),
