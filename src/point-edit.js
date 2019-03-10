@@ -1,20 +1,8 @@
-import makePoint from './make-point.js';
+import Component from './component.js';
 
-const ICONS = new Map([
-  [`Taxi`, `🚕`],
-  [`Bus`, `🚌`],
-  [`Train`, `🚂`],
-  [`Ship`, `🛳️`],
-  [`Transport`, `🚊`],
-  [`Drive`, `🚗`],
-  [`Flight`, `✈️`],
-  [`Check-in`, `🏨`],
-  [`Sightseeing`, `🏛️`],
-  [`Restaurant`, `🍴`]
-]);
-
-class PointEdit {
+class PointEdit extends Component {
   constructor(data) {
+    super();
     this._type = data.type;
     this._city = data.city;
     this._pictures = data.pictures;
@@ -24,7 +12,6 @@ class PointEdit {
     this._endDate = new Date(data.endDate);
     this._price = data.price;
 
-    this._element = null;
     this._onSubmit = null;
     this._onReset = null;
     this._submitListenerBind = null;
@@ -39,10 +26,6 @@ class PointEdit {
   _onResetButtonClick(evt) {
     evt.preventDefault();
     return typeof this._onReset === `function` && this._onReset();
-  }
-
-  get element() {
-    return this._element;
   }
 
   set onSubmit(fn) {
@@ -63,7 +46,7 @@ class PointEdit {
       </label>
 
       <div class="travel-way">
-        <label class="travel-way__label" for="travel-way__toggle">${ICONS.get(this._type)}</label>
+        <label class="travel-way__label" for="travel-way__toggle">${this._icons.get(this._type)}</label>
 
         <input type="checkbox" class="travel-way__toggle visually-hidden" id="travel-way__toggle">
 
@@ -160,7 +143,7 @@ class PointEdit {
 </article>`.trim();
   }
 
-  bind() {
+  createListeners() {
     this._submitListenerBind = this._onSubmitButtonClick.bind(this);
     this._resetListenerBind = this._onResetButtonClick.bind(this);
     this._element.querySelector(`.point__form`)
@@ -169,24 +152,13 @@ class PointEdit {
       .addEventListener(`reset`, this._resetListenerBind);
   }
 
-  render() {
-    this._element = makePoint(this.template);
-    this.bind();
-    return this._element;
-  }
-
-  unbind() {
+  removeListeners() {
     this._element.querySelector(`.point__form`)
       .removeEventListener(`submit`, this._submitListenerBind);
     this._element.querySelector(`.point__form`)
       .removeEventListener(`reset`, this._resetListenerBind);
     this._submitListenerBind = null;
     this._resetListenerBind = null;
-  }
-
-  unrender() {
-    this.unbind();
-    this._element = null;
   }
 }
 

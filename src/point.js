@@ -1,31 +1,19 @@
-import makePoint from './make-point.js';
+import Component from './component.js';
 
-const ICONS = new Map([
-  [`Taxi`, `🚕`],
-  [`Bus`, `🚌`],
-  [`Train`, `🚂`],
-  [`Ship`, `🛳️`],
-  [`Transport`, `🚊`],
-  [`Drive`, `🚗`],
-  [`Flight`, `✈️`],
-  [`Check-in`, `🏨`],
-  [`Sightseeing`, `🏛️`],
-  [`Restaurant`, `🍴`]
-]);
-const MILLISECONDS_IN_MINUTE = 60000;
-const MINUTES_IN_HOUR = 60;
-
-class Point {
+class Point extends Component {
   constructor(data) {
+    super();
     this._type = data.type;
     this._city = data.city;
     this._offers = data.offers;
     this._startDate = new Date(data.startDate);
     this._endDate = new Date(data.endDate);
     this._price = data.price;
-    this._durationInMinutes = Math.round((data.endDate - data.startDate) / MILLISECONDS_IN_MINUTE);
 
-    this._element = null;
+    this._millisecondsInMinute = 60000;
+    this._minutesInHour = 60;
+    this._durationInMinutes = Math.round((data.endDate - data.startDate) / this._millisecondsInMinute);
+
     this._onClick = null;
     this._clickListenerBind = null;
   }
@@ -34,17 +22,13 @@ class Point {
     return typeof this._onClick === `function` && this._onClick();
   }
 
-  get element() {
-    return this._element;
-  }
-
   set onClick(fn) {
     this._onClick = fn;
   }
 
   get template() {
     return `<article class="trip-point">
-    <i class="trip-icon">${ICONS.get(this._type)}</i>
+    <i class="trip-icon">${this._icons.get(this._type)}</i>
     <h3 class="trip-point__title">${this._type} in ${this._city}</h3>
     <p class="trip-point__schedule">
       <span class="trip-point__timetable">
@@ -52,7 +36,7 @@ class Point {
         ${this._endDate.toLocaleString(`en-gb`, {hour: `numeric`, minute: `numeric`})}
       </span>
       <span class="trip-point__duration">
-        ${Math.floor(this._durationInMinutes / MINUTES_IN_HOUR)}h ${this._durationInMinutes % MINUTES_IN_HOUR}m
+        ${Math.floor(this._durationInMinutes / this._minutesInHour)}h ${this._durationInMinutes % this._minutesInHour}m
       </span>
     </p>
     <p class="trip-point__price">&euro;&nbsp;${this._price}</p>
@@ -68,25 +52,14 @@ class Point {
   </article>`.trim();
   }
 
-  bind() {
+  createListeners() {
     this._clickListenerBind = this._onPointClick.bind(this);
     this._element.addEventListener(`click`, this._clickListenerBind);
   }
 
-  render() {
-    this._element = makePoint(this.template);
-    this.bind();
-    return this._element;
-  }
-
-  unbind() {
+  removeListeners() {
     this._element.removeEventListener(`click`, this._clickListenerBind);
     this._clickListenerBind = null;
-  }
-
-  unrender() {
-    this.unbind();
-    this._element = null;
   }
 }
 
