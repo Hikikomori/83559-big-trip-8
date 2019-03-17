@@ -445,13 +445,24 @@ input[type=radio]:checked + .trip-sorting__item {
   display: none;
 }
 .point__time {
+  border-bottom: 1px solid #0D8AE4;
   font-size: 0;
   width: 130px;
   margin-right: 40px;
+  position: relative;
+  z-index: 2;
 }
 .point__time .point__input {
+  border: none;
+  font-size: 17px;
+  width: 40%;
+  text-align: center;
+}
+
+.point__time .point__time-dash {
   font-size: 17px;
 }
+
 .point__price {
   display: flex;
   font-size: 0;
