@@ -1,5 +1,3 @@
-import makeNode from './make-node.js';
-
 class Component {
   constructor() {
     if (new.target === Component) {
@@ -29,12 +27,18 @@ class Component {
     throw new Error(`You have to define template.`);
   }
 
+  createNode(template) {
+    const container = document.createElement(`div`);
+    container.insertAdjacentHTML(`beforeend`, template);
+    return container.firstChild;
+  }
+
   createListeners() {}
 
   removeListeners() {}
 
   render() {
-    this._element = makeNode(this.template);
+    this._element = this.createNode(this.template);
     this.createListeners();
     return this._element;
   }

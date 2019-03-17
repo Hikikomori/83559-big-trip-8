@@ -25,7 +25,16 @@ const generatePoints = (fragment) => {
     point.unrender();
   };
 
-  pointEdit.onSubmit = () => {
+  pointEdit.onSubmit = (obj) => {
+    data.type = obj.type;
+    data.city = obj.city;
+    data.activeOffers = obj.activeOffers;
+    data.startDate = obj.startDate;
+    data.endDate = obj.endDate;
+    data.price = obj.price;
+    data.isFavorite = obj.isFavorite;
+
+    point.update(data);
     point.render();
     pointsContainer.replaceChild(point.element, pointEdit.element);
     pointEdit.unrender();
