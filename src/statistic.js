@@ -216,7 +216,8 @@ class Statistic extends Component {
     });
   }
 
-  update() {
+  update(data = this._fullData) {
+    this._fullData = data;
     this._generateChartData();
     this._moneyChart.data.labels = this._formattedTypesTitles;
     this._moneyChart.data.datasets[0].data = this._typesCosts;

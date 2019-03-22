@@ -63,6 +63,7 @@ const generateFilters = (fragment, data) => {
 
   filterEverything.onFilter = () => {
     renderPoints(initialPointDatas);
+    statistic.update(initialPointDatas);
   };
 
   filterFuture.onFilter = () => {
@@ -74,6 +75,7 @@ const generateFilters = (fragment, data) => {
     });
 
     renderPoints(pointDatas);
+    statistic.update(pointDatas);
   };
 
   filterPast.onFilter = () => {
@@ -85,6 +87,7 @@ const generateFilters = (fragment, data) => {
     });
 
     renderPoints(pointDatas);
+    statistic.update(pointDatas);
   };
 };
 
