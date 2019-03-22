@@ -1,73 +1,147 @@
-import makeFilter from './make-filter.js';
-import pointData from './generate-point-data.js';
+import Filter from './filter.js';
+import filtersData from './filters-data.js';
+
+import makePointData from './generate-point-data.js';
 
 import Point from './point.js';
 import PointEdit from './point-edit.js';
+import Statistic from './statistic.js';
 
 const INITIAL_POINT_COUNT = 7;
-const MIN_RANDOM_POINT_COUNT = 1;
-const MAX_RANDOM_POINT_COUNT = 13;
 
+const controls = document.querySelector(`.trip-controls`);
+const controlsBtnTable = controls.querySelector(`.view-switch__item[href="#table"]`);
+const controlsBtnStats = controls.querySelector(`.view-switch__item[href="#stats"]`);
+const mainContainer = document.querySelector(`.main`);
 const filterContainer = document.querySelector(`.trip-filter`);
 const pointsContainer = document.querySelector(`.trip-day__items`);
-const getRandomPointsValue = () => Math.round(Math.random() * MAX_RANDOM_POINT_COUNT + MIN_RANDOM_POINT_COUNT);
-const filtersData = [{name: `Everything`, isChecked: true}, {name: `Future`, isChecked: false}, {name: `Past`, isChecked: false}];
 
-const generatePoints = (fragment) => {
-  let data = pointData();
-  let point = new Point(data);
-  let pointEdit = new PointEdit(data);
+const createDataArr = (length) => {
+  let base = new Array(length).fill(null);
+  return base.map(() => makePointData());
+};
 
-  fragment.appendChild(point.render());
-  point.onClick = () => {
-    pointEdit.render();
-    pointsContainer.replaceChild(pointEdit.element, point.element);
-    point.unrender();
+const initialPointDatas = createDataArr(INITIAL_POINT_COUNT);
+
+controlsBtnTable.addEventListener(`click`, (evt) => {
+  evt.preventDefault();
+
+  if (!evt.target.classList.contains(`view-switch__item--active`)) {
+    evt.target.classList.add(`view-switch__item--active`);
+    controlsBtnStats.classList.remove(`view-switch__item--active`);
+    mainContainer.classList.remove(`visually-hidden`);
+    statsContainer.classList.add(`visually-hidden`);
+  }
+
+  return false;
+});
+
+controlsBtnStats.addEventListener(`click`, (evt) => {
+  evt.preventDefault();
+
+  if (!evt.target.classList.contains(`view-switch__item--active`)) {
+    evt.target.classList.add(`view-switch__item--active`);
+    controlsBtnTable.classList.remove(`view-switch__item--active`);
+    mainContainer.classList.add(`visually-hidden`);
+    statsContainer.classList.remove(`visually-hidden`);
+    statistic.update();
+  }
+
+  return false;
+});
+
+const generateFilters = (fragment, data) => {
+  const findFilter = (name) => data.find((elem) => elem.name === name);
+
+  const filterEverything = new Filter(findFilter(`Everything`));
+  const filterFuture = new Filter(findFilter(`Future`));
+  const filterPast = new Filter(findFilter(`Past`));
+
+  fragment.appendChild(filterEverything.render());
+  fragment.appendChild(filterFuture.render());
+  fragment.appendChild(filterPast.render());
+
+  filterEverything.onFilter = () => {
+    renderPoints(initialPointDatas);
   };
 
-  pointEdit.onSubmit = (obj) => {
-    data.type = obj.type;
-    data.city = obj.city;
-    data.activeOffers = obj.activeOffers;
-    data.startDate = obj.startDate;
-    data.endDate = obj.endDate;
-    data.price = obj.price;
-    data.isFavorite = obj.isFavorite;
+  filterFuture.onFilter = () => {
+    let pointDatas = initialPointDatas.map((pointData) => {
+      if (pointData.startDate && pointData.endDate && (pointData.startDate + pointData.endDate) / 2 > Date.now()) {
+        return pointData;
+      }
+      return null;
+    });
 
-    point.update(data);
-    point.render();
-    pointsContainer.replaceChild(point.element, pointEdit.element);
-    pointEdit.unrender();
+    renderPoints(pointDatas);
   };
 
-  pointEdit.onReset = () => {
-    point.render();
-    pointsContainer.replaceChild(point.element, pointEdit.element);
-    pointEdit.unrender();
+  filterPast.onFilter = () => {
+    let pointDatas = initialPointDatas.map((pointData) => {
+      if (pointData.startDate && pointData.endDate && (pointData.startDate + pointData.endDate) / 2 < Date.now()) {
+        return pointData;
+      }
+      return null;
+    });
+
+    renderPoints(pointDatas);
   };
 };
 
-const filters = filtersData.map((filter) => {
-  return makeFilter(filter.name, filter.isChecked);
-});
+const generatePoints = (fragment, data, i) => {
+  if (data[i]) {
+    let pointData = data[i];
+    let point = new Point(pointData);
+    let pointEdit = new PointEdit(pointData);
 
-filterContainer.insertAdjacentHTML(`beforeend`, filters.join(``));
+    fragment.appendChild(point.render());
+    point.onClick = () => {
+      pointEdit.render();
+      pointsContainer.replaceChild(pointEdit.element, point.element);
+      point.unrender();
+    };
 
-const filterElements = filterContainer.querySelectorAll(`.trip-filter__item`);
+    pointEdit.onSubmit = (obj) => {
+      data.type = obj.type;
+      data.city = obj.city;
+      data.activeOffers = obj.activeOffers;
+      data.startDate = obj.startDate;
+      data.endDate = obj.endDate;
+      data.price = obj.price;
+      data.isFavorite = obj.isFavorite;
 
-for (let filter of filterElements) {
-  filter.addEventListener(`click`, () => {
-    pointsContainer.innerHTML = ``;
-    let points = document.createDocumentFragment();
-    for (let i = 1; i <= getRandomPointsValue(); i++) {
-      generatePoints(points);
-    }
-    pointsContainer.appendChild(points);
-  });
-}
+      point.update(data);
+      point.render();
+      pointsContainer.replaceChild(point.element, pointEdit.element);
+      pointEdit.unrender();
+    };
 
-let points = document.createDocumentFragment();
-for (let i = 1; i <= INITIAL_POINT_COUNT; i++) {
-  generatePoints(points);
-}
-pointsContainer.appendChild(points);
+    pointEdit.onDelete = () => {
+      pointEdit.unrender();
+      data[i] = null;
+      statistic.update();
+    };
+  }
+};
+
+const renderPoints = (data) => {
+  pointsContainer.innerHTML = ``;
+  let points = document.createDocumentFragment();
+  for (let i = 0; i < data.length; i++) {
+    generatePoints(points, data, i);
+  }
+  pointsContainer.appendChild(points);
+};
+
+let filters = document.createDocumentFragment();
+generateFilters(filters, filtersData);
+filterContainer.appendChild(filters);
+
+renderPoints(initialPointDatas);
+
+const statistic = new Statistic(initialPointDatas);
+mainContainer.parentNode.appendChild(statistic.render());
+const statsContainer = document.querySelector(`.statistic`);
+statistic.drawCharts();
+
+
