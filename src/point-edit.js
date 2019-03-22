@@ -17,10 +17,10 @@ class PointEdit extends Component {
     this._isFavorite = data.isFavorite;
 
     this._onSubmit = null;
-    this._onReset = null;
+    this._onDelete = null;
     this._onChangeType = this._onChangeType.bind(this);
     this._onSubmitButtonClick = this._onSubmitButtonClick.bind(this);
-    this._onResetButtonClick = this._onResetButtonClick.bind(this);
+    this._onDeleteButtonClick = this._onDeleteButtonClick.bind(this);
   }
 
   _onChangeType(evt) {
@@ -69,17 +69,17 @@ class PointEdit extends Component {
     return typeof this._onSubmit === `function` && this._onSubmit(newData);
   }
 
-  _onResetButtonClick(evt) {
+  _onDeleteButtonClick(evt) {
     evt.preventDefault();
-    return typeof this._onReset === `function` && this._onReset();
+    return typeof this._onDelete === `function` && this._onDelete();
   }
 
   set onSubmit(fn) {
     this._onSubmit = fn;
   }
 
-  set onReset(fn) {
-    this._onReset = fn;
+  set onDelete(fn) {
+    this._onDelete = fn;
   }
 
   get template() {
@@ -203,7 +203,7 @@ ${Array.from(this._offers).map((offer) => {
     this._element.querySelector(`.point__form`)
       .addEventListener(`submit`, this._onSubmitButtonClick);
     this._element.querySelector(`.point__form`)
-      .addEventListener(`reset`, this._onResetButtonClick);
+      .addEventListener(`reset`, this._onDeleteButtonClick);
     this._element.querySelector(`.travel-way__select`)
       .addEventListener(`click`, this._onChangeType);
 
@@ -253,7 +253,7 @@ ${Array.from(this._offers).map((offer) => {
     this._element.querySelector(`.point__form`)
       .removeEventListener(`submit`, this._onSubmitButtonClick);
     this._element.querySelector(`.point__form`)
-      .removeEventListener(`reset`, this._onResetButtonClick);
+      .removeEventListener(`reset`, this._onDeleteButtonClick);
     this._element.querySelector(`.travel-way__select`)
       .removeEventListener(`click`, this._onChangeType);
   }
