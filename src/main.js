@@ -1,27 +1,29 @@
 import Filter from './filter.js';
 import filtersData from './filters-data.js';
 
-import makePointData from './generate-point-data.js';
+import newPointData from './generate-point-data.js';
 
+import Api from './api.js';
 import Point from './point.js';
 import PointEdit from './point-edit.js';
 import Statistic from './statistic.js';
 
-const INITIAL_POINT_COUNT = 7;
+const AUTHORIZATION = `Basic dXN0ckbwYXNzd29yZAoDickKickem`;
+const END_POINT = `https://es8-demo-srv.appspot.com/big-trip`;
 
 const controls = document.querySelector(`.trip-controls`);
 const controlsBtnTable = controls.querySelector(`.view-switch__item[href="#table"]`);
 const controlsBtnStats = controls.querySelector(`.view-switch__item[href="#stats"]`);
 const mainContainer = document.querySelector(`.main`);
+const newPoint = document.querySelector(`.new-event`);
 const filterContainer = document.querySelector(`.trip-filter`);
 const pointsContainer = document.querySelector(`.trip-day__items`);
-
-const createDataArr = (length) => {
-  let base = new Array(length).fill(null);
-  return base.map(() => makePointData());
-};
-
-const initialPointDatas = createDataArr(INITIAL_POINT_COUNT);
+const api = new Api(END_POINT, AUTHORIZATION);
+let pointDatas = null;
+let statistic = null;
+let statsContainer = null;
+let availOffers = null;
+let availDests = null;
 
 controlsBtnTable.addEventListener(`click`, (evt) => {
   evt.preventDefault();
@@ -62,40 +64,40 @@ const generateFilters = (fragment, data) => {
   fragment.appendChild(filterPast.render());
 
   filterEverything.onFilter = () => {
-    renderPoints(initialPointDatas);
-    statistic.update(initialPointDatas);
+    renderPoints(pointDatas);
+    statistic.update(pointDatas);
   };
 
   filterFuture.onFilter = () => {
-    let pointDatas = initialPointDatas.map((pointData) => {
-      if (pointData.startDate && pointData.endDate && (pointData.startDate + pointData.endDate) / 2 > Date.now()) {
+    let filteredPointDatas = pointDatas.map((pointData) => {
+      if (pointData.startDateTime && pointData.startDateTime > Date.now()) {
         return pointData;
       }
       return null;
     });
 
-    renderPoints(pointDatas);
-    statistic.update(pointDatas);
+    renderPoints(filteredPointDatas);
+    statistic.update(filteredPointDatas);
   };
 
   filterPast.onFilter = () => {
-    let pointDatas = initialPointDatas.map((pointData) => {
-      if (pointData.startDate && pointData.endDate && (pointData.startDate + pointData.endDate) / 2 < Date.now()) {
+    let filteredPointDatas = pointDatas.map((pointData) => {
+      if (pointData.startDateTime && pointData.startDateTime < Date.now()) {
         return pointData;
       }
       return null;
     });
 
-    renderPoints(pointDatas);
-    statistic.update(pointDatas);
+    renderPoints(filteredPointDatas);
+    statistic.update(filteredPointDatas);
   };
 };
 
-const generatePoints = (fragment, data, i) => {
-  if (data[i]) {
-    let pointData = data[i];
+const generatePoints = (fragment, data) => {
+  if (data) {
+    let pointData = data;
     let point = new Point(pointData);
-    let pointEdit = new PointEdit(pointData);
+    let pointEdit = new PointEdit(pointData, availDests, availOffers);
 
     fragment.appendChild(point.render());
     point.onClick = () => {
@@ -105,24 +107,59 @@ const generatePoints = (fragment, data, i) => {
     };
 
     pointEdit.onSubmit = (obj) => {
-      data.type = obj.type;
-      data.city = obj.city;
-      data.activeOffers = obj.activeOffers;
-      data.startDate = obj.startDate;
-      data.endDate = obj.endDate;
-      data.price = obj.price;
-      data.isFavorite = obj.isFavorite;
+      const element = pointEdit.element;
+      const form = element.querySelector(`.point__form`);
+      const saveBtn = element.querySelector(`.point__button--save`);
 
-      point.update(data);
-      point.render();
-      pointsContainer.replaceChild(point.element, pointEdit.element);
-      pointEdit.unrender();
+      pointData.type = obj.type;
+      pointData.city = obj.city;
+      pointData.offers = obj.offers;
+      pointData.startDateTime = obj.startDateTime;
+      pointData.endDateTime = obj.endDateTime;
+      pointData.basePrice = obj.basePrice;
+      pointData.offersPrice = obj.offersPrice;
+      pointData.isFavorite = obj.isFavorite;
+
+      form.setAttribute(`disabled`, `disabled`);
+      saveBtn.textContent = `Saving...`;
+
+      api.updatePoint({id: pointData.id, data: pointData.toRAW()})
+        .then((editedpointData) => {
+          point.update(editedpointData);
+          point.render();
+          pointsContainer.replaceChild(point.element, pointEdit.element);
+          pointEdit.unrender();
+        })
+        .catch(() => {
+          form.removeAttribute(`disabled`);
+          saveBtn.textContent = `Save`;
+          element.style.border = `2px solid red`;
+          element.classList.add(`shake`);
+        });
+
+      statistic.update();
     };
 
-    pointEdit.onDelete = () => {
-      pointEdit.unrender();
-      data[i] = null;
-      statistic.update();
+    pointEdit.onDelete = ({id}) => {
+      const element = pointEdit.element;
+      const form = element.querySelector(`.point__form`);
+      const deleteBtn = element.querySelector(`.point__button--delete`);
+
+      form.setAttribute(`disabled`, `disabled`);
+      deleteBtn.textContent = `Deleting...`;
+
+      api.deletePoint({id})
+        .then(() => api.getPoints())
+        .then((points) => {
+          pointDatas = points;
+        })
+        .then(update)
+        .catch(() => {
+          form.removeAttribute(`disabled`);
+          element.style.border = `2px solid red`;
+          element.classList.add(`shake`);
+          deleteBtn.textContent = `Delete`;
+        });
     };
   }
 };
@@ -130,21 +167,59 @@ const generatePoints = (fragment, data, i) => {
 const renderPoints = (data) => {
   pointsContainer.innerHTML = ``;
   let points = document.createDocumentFragment();
-  for (let i = 0; i < data.length; i++) {
-    generatePoints(points, data, i);
+  for (let dataPart of data) {
+    generatePoints(points, dataPart);
   }
   pointsContainer.appendChild(points);
+};
+
+const init = () => {
+  pointsContainer.textContent = ``;
+  renderPoints(pointDatas);
+  statistic = new Statistic(pointDatas); mainContainer.parentNode.appendChild(statistic.render());
+  statsContainer = document.querySelector(`.statistic`);
+  statistic.drawCharts();
+};
+
+const update = () => {
+  renderPoints(pointDatas);
+  statistic.update(pointDatas);
 };
 
 let filters = document.createDocumentFragment();
 generateFilters(filters, filtersData);
 filterContainer.appendChild(filters);
 
-renderPoints(initialPointDatas);
+pointsContainer.textContent = `Loading route...`;
 
-const statistic = new Statistic(initialPointDatas);
-mainContainer.parentNode.appendChild(statistic.render());
-const statsContainer = document.querySelector(`.statistic`);
-statistic.drawCharts();
+api.getPoints()
+  .catch(() => {
+    pointsContainer.textContent = `Something went wrong while loading your route info. Check your connection or try again later`;
+  })
+  .then((points) => {
+    pointDatas = points;
+  })
+  .then(() => {
+    api.getOffers()
+      .then((offers) => {
+        availOffers = offers;
+      })
+      .then(() => {
+        api.getDestinations()
+          .then((dests) => {
+            availDests = dests;
+          })
+          .then(init);
+      });
+  });
+
+newPoint.addEventListener(`click`, () => {
+  api.createPoint({point: newPointData})
+    .then(() => api.getPoints())
+    .then((points) => {
+      pointDatas = points;
+    })
+    .then(update);
+});
 
 

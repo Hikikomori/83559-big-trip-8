@@ -49,7 +49,7 @@ class Statistic extends Component {
       return this._data.filter((elem) => {
         return elem.type === type;
       }).map((elem) => {
-        return elem.price;
+        return elem.basePrice + elem.offersPrice;
       }).reduce((acc, val) => {
         return acc + val;
       });

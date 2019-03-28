@@ -3,22 +3,27 @@ import moment from "moment";
 import flatpickr from "flatpickr";
 
 class PointEdit extends Component {
-  constructor(data) {
+  constructor(data, allDests, allOffers) {
     super();
+    this._id = data.id;
     this._type = data.type;
     this._city = data.city;
     this._pictures = data.pictures;
     this._offers = data.offers;
-    this._activeOffers = data.activeOffers;
     this._description = data.description;
-    this._startDate = data.startDate;
-    this._endDate = data.endDate;
-    this._price = data.price;
+    this._startDateTime = data.startDateTime;
+    this._endDateTime = data.endDateTime;
+    this._basePrice = data.basePrice;
     this._isFavorite = data.isFavorite;
+
+    this._allOffers = allOffers;
+    this._allDests = allDests;
 
     this._onSubmit = null;
     this._onDelete = null;
+    this._onFormClick = this._onFormClick.bind(this);
     this._onChangeType = this._onChangeType.bind(this);
+    this._onChangeDest = this._onChangeDest.bind(this);
     this._onSubmitButtonClick = this._onSubmitButtonClick.bind(this);
     this._onDeleteButtonClick = this._onDeleteButtonClick.bind(this);
   }
@@ -26,9 +31,40 @@ class PointEdit extends Component {
   _onChangeType(evt) {
     if (evt.target.tagName.toLowerCase() === `input`) {
       this._type = evt.target.value;
-      this.removeListeners();
-      this._partialUpdate();
-      this.createListeners();
+      if (this._allOffers) {
+        this._offers = [];
+        this._allOffers.map((offersPack) => {
+          if (offersPack.type === this._type.toLowerCase()) {
+            this._offers = offersPack.offers.map((offer) => {
+              return {
+                title: offer.name,
+                price: offer.price,
+                accepted: false
+              };
+            });
+          }
+        });
+
+        this.removeListeners();
+        this._partialUpdate();
+        this.createListeners();
+      }
+    }
+  }
+
+  _onChangeDest(evt) {
+    if (this._allDests) {
+      this._allDests.map((dest) => {
+        if (dest.name === evt.target.value) {
+          this._city = dest.name;
+          this._description = dest.description;
+          this._pictures = dest.pictures;
+
+          this.removeListeners();
+          this._partialUpdate();
+          this.createListeners();
+        }
+      });
     }
   }
 
@@ -42,10 +78,17 @@ class PointEdit extends Component {
     const entry = {
       type: ``,
       city: ``,
-      activeOffers: new Set(),
-      startDate: ``,
-      endDate: ``,
-      price: ``,
+      offers: this._offers.map((offer) => {
+        return {
+          title: offer.title,
+          price: offer.price,
+          accepted: false,
+        };
+      }),
+      startDateTime: ``,
+      endDateTime: ``,
+      basePrice: 0,
+      offersPrice: 0,
       isFavorite: false
     };
 
@@ -71,7 +114,14 @@ class PointEdit extends Component {
 
   _onDeleteButtonClick(evt) {
     evt.preventDefault();
-    return typeof this._onDelete === `function` && this._onDelete();
+    if (typeof this._onDelete === `function`) {
+      this._onDelete({id: this._id});
+    }
+  }
+
+  _onFormClick() {
+    this._element.style.border = ``;
+    this._element.classList.remove(`shake`);
   }
 
   set onSubmit(fn) {
@@ -128,38 +178,37 @@ class PointEdit extends Component {
               <label class="travel-way__select-label" for="travel-way-sightseeing">🏛 sightseeing</label>
               
               <input class="travel-way__select-input visually-hidden" type="radio" id="travel-way-restaurant" name="travelWay" value="Restaurant" ${this._type === `Restaurant` ? `checked` : ``}>
-              <label class="travel-way__select-label" for="travel-way-sightseeing">🍴 restaurant</label>
+              <label class="travel-way__select-label" for="travel-way-restaurant">🍴 restaurant</label>
               </div>
             </div>
           </div>
     
           <div class="point__destination-wrap">
-            <label class="point__destination-label" for="destination">${this._type} in</label>
-        <input class="point__destination-input" list="destination-select" id="destination" value="${this._city}" name="destination">
+            <label class="point__destination-label" for="destination">${this._type} ${this._type !== `Check-in` && this._type !== `Sightseeing` && this._type !== `Restaurant` ? `to` : `in`}</label>
+          <input class="point__destination-input" list="destination-select" id="destination" value="${this._city}" name="destination">
         <datalist id="destination-select">
-          <option value="airport"></option>
-          <option value="Geneva"></option>
-          <option value="Chamonix"></option>
-          <option value="hotel"></option>
+          ${this._allDests.map((dest) => {
+    return `<option value="${dest.name}"></option>`;
+  })}
         </datalist>
       </div>
 
-      <label class="point__time">
+      <div class="point__time">
         choose time
-        <input class="point__input" type="text" value="" name="startTime" placeholder="12:00">
+        <input class="point__input" type="text" value="" name="startDateTime" placeholder="12:00">
         <span class="point__time-dash">—</span>
-        <input class="point__input" type="text" value="" name="endTime" placeholder="12:00">
-        </label>
+        <input class="point__input" type="text" value="" name="endDateTime" placeholder="12:00">
+      </div>
   
-        <label class="point__price">
-          write price
-          <span class="point__price-currency">€</span>
-          <input class="point__input" type="text" value="${this._price}" name="price">
+      <label class="point__price">
+        write price
+        <span class="point__price-currency">€</span>
+        <input class="point__input" type="text" value="${this._basePrice}" name="price">
       </label>
 
       <div class="point__buttons">
         <button class="point__button point__button--save" type="submit">Save</button>
-        <button class="point__button" type="reset">Delete</button>
+        <button class="point__button point__button--delete" type="reset">Delete</button>
       </div>
 
       <div class="paint__favorite-wrap">
@@ -170,12 +219,11 @@ class PointEdit extends Component {
   
       <section class="point__details">
         <section class="point__offers">
-          <h3 class="point__details-title">offers</h3>
-  
+          ${this._offers.length > 0 ? `<h3 class="point__details-title">offers</h3>` : ``}
           <div class="point__offers-wrap">
-${Array.from(this._offers).map((offer) => {
-    return `<input class="point__offers-input visually-hidden" type="checkbox" id="${offer.value}" name="offer" value="${offer.value}" ${this._activeOffers.has(offer.value) ? `checked` : ``}>
-            <label for="${offer.value}" class="point__offers-label">
+            ${this._offers.map((offer) => {
+    return `<input class="point__offers-input visually-hidden" type="checkbox" id="${offer.title.replace(/\s/g, `_`)}" name="offer" value="${offer.title.replace(/\s/g, `_`)}" ${offer.accepted ? `checked` : ``}>
+            <label for="${offer.title.replace(/\s/g, `_`)}" class="point__offers-label">
               <span class="point__offer-service">${offer.title}</span> + €<span class="point__offer-price">${offer.price}</span>
             </label>`;
   }).join(``)
@@ -188,7 +236,7 @@ ${Array.from(this._offers).map((offer) => {
         <p class="point__destination-text">${this._description}</p>
         <div class="point__destination-images">
         ${this._pictures.map((picture) => {
-    return `<img src="${picture}" alt="picture from place" class="point__destination-image">`;
+    return `<img src="${picture.src}" alt="${picture.description}" class="point__destination-image">`;
   }).join(``)
 }
         </div>
@@ -199,23 +247,27 @@ ${Array.from(this._offers).map((offer) => {
 </article>`.trim();
   }
 
+
   createListeners() {
     this._element.querySelector(`.point__form`)
       .addEventListener(`submit`, this._onSubmitButtonClick);
     this._element.querySelector(`.point__form`)
       .addEventListener(`reset`, this._onDeleteButtonClick);
+    this._element.querySelector(`.point__form`)
+      .addEventListener(`click`, this._onFormClick);
     this._element.querySelector(`.travel-way__select`)
       .addEventListener(`click`, this._onChangeType);
+    this._element.querySelector(`.point__destination-input`)
+      .addEventListener(`change`, this._onChangeDest);
 
     const times = this._element.querySelectorAll(`.point__time input`);
     const startTime = flatpickr(times[0], {
       enableTime: true,
-      noCalendar: true,
       altInput: true,
       altFormat: `H:i`,
       dateFormat: `Z`,
       minuteIncrement: 1,
-      defaultDate: moment(this._startDate).format(),
+      defaultDate: moment(this._startDateTime).format(),
       onChange: (selectedDates) => {
         endTime.set(`minDate`, selectedDates[0]);
       },
@@ -230,12 +282,11 @@ ${Array.from(this._offers).map((offer) => {
 
     const endTime = flatpickr(times[1], {
       enableTime: true,
-      noCalendar: true,
       altInput: true,
       altFormat: `H:i`,
       dateFormat: `Z`,
       minuteIncrement: 1,
-      defaultDate: moment(this._endDate).format(),
+      defaultDate: moment(this._endDateTime).format(),
       onChange: (selectedDates) => {
         startTime.set(`maxDate`, selectedDates[0]);
       },
@@ -254,17 +305,21 @@ ${Array.from(this._offers).map((offer) => {
       .removeEventListener(`submit`, this._onSubmitButtonClick);
     this._element.querySelector(`.point__form`)
       .removeEventListener(`reset`, this._onDeleteButtonClick);
+    this._element.querySelector(`.point__form`)
+      .removeEventListener(`click`, this._onFormClick);
     this._element.querySelector(`.travel-way__select`)
       .removeEventListener(`click`, this._onChangeType);
+    this._element.querySelector(`.point__destination-input`)
+      .removeEventListener(`change`, this._onChangeDest);
   }
 
   update(data) {
     this._type = data.type;
     this._city = data.city;
-    this._activeOffers = data.activeOffers;
-    this._startDate = data.startDate;
-    this._endDate = data.endDate;
-    this._price = data.price;
+    this._offers = data.offers;
+    this._startDateTime = data.startDateTime;
+    this._endDateTime = data.endDateTime;
+    this._basePrice = data.basePrice;
     this._isFavorite = data.isFavorite;
   }
 
@@ -277,16 +332,21 @@ ${Array.from(this._offers).map((offer) => {
         target.city = value;
       },
       offer(value) {
-        target.activeOffers.add(value);
+        for (let offer of target.offers) {
+          if (value.replace(/_/g, ` `) === offer.title) {
+            offer.accepted = true;
+            target.offersPrice += offer.price;
+          }
+        }
       },
-      startTime(value) {
-        target.startDate = Date.parse(value);
+      startDateTime(value) {
+        target.startDateTime = Date.parse(value);
       },
-      endTime(value) {
-        target.endDate = Date.parse(value);
+      endDateTime(value) {
+        target.endDateTime = Date.parse(value);
       },
       price(value) {
-        target.price = value;
+        target.basePrice = parseInt(value, 10);
       },
       favorite(value) {
         target.isFavorite = Boolean(value);
