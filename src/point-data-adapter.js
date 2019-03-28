@@ -35,7 +35,7 @@ class PointDataAdapter {
       'offers': this.offers,
       'date_from': this.startDateTime,
       'date_to': this.endDateTime,
-      'base_price': this.price,
+      'base_price': this.basePrice,
       'is_favorite': this.isFavorite,
     };
   }
