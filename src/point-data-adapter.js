@@ -41,11 +41,7 @@ class PointDataAdapter {
   }
 
   static parsePoint(data) {
-    if (data) {
-      return new PointDataAdapter(data);
-    }
-
-    return false;
+    return new PointDataAdapter(data);
   }
 
   static parsePoints(data) {
