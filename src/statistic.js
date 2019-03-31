@@ -49,7 +49,7 @@ class Statistic extends Component {
       return this._data.filter((elem) => {
         return elem.type === type;
       }).map((elem) => {
-        return elem.price;
+        return elem.basePrice + elem.offersPrice;
       }).reduce((acc, val) => {
         return acc + val;
       });
@@ -216,7 +216,8 @@ class Statistic extends Component {
     });
   }
 
-  update() {
+  update(data = this._fullData) {
+    this._fullData = data;
     this._generateChartData();
     this._moneyChart.data.labels = this._formattedTypesTitles;
     this._moneyChart.data.datasets[0].data = this._typesCosts;
