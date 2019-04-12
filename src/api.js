@@ -1,10 +1,30 @@
-import PointDataAdapter from './point-data-adapter.js';
+import adapter from './point-data-adapter.js';
+
+const HTTP_CODES = {
+  success: 200,
+  redirect: 300
+};
 
 class Api {
   constructor(endPoint, authorization) {
     this._endPoint = endPoint;
     this._authorization = authorization;
-    this._method = {
+  }
+
+  static _checkStatus(response) {
+    if (response.status >= HTTP_CODES.success && response.status < HTTP_CODES.redirect) {
+      return response;
+    } else {
+      throw new Error(`${response.status}: ${response.statusText}`);
+    }
+  }
+
+  static _toJSON(response) {
+    return response.json();
+  }
+
+  static _method() {
+    return {
       get: `GET`,
       post: `POST`,
       put: `PUT`,
@@ -12,65 +32,52 @@ class Api {
     };
   }
 
-  _checkStatus(response) {
-    if (response.status >= 200 && response.status < 300) {
-      return response;
-    } else {
-      throw new Error(`${response.status}: ${response.statusText}`);
-    }
-  }
-
-  _toJSON(response) {
-    return response.json();
-  }
-
   getPoints() {
     return this._load({url: `points`})
-      .then(this._toJSON)
-      .then(PointDataAdapter.parsePoints);
+      .then(Api._toJSON)
+      .then(adapter.parsePoints);
   }
 
   getOffers() {
     return this._load({url: `offers`})
-      .then(this._toJSON);
+      .then(Api._toJSON);
   }
 
   getDestinations() {
     return this._load({url: `destinations`})
-      .then(this._toJSON);
+      .then(Api._toJSON);
   }
 
   createPoint({point}) {
     return this._load({
       url: `points`,
-      method: this._method.post,
+      method: Api._method().post,
       body: JSON.stringify(point),
       headers: new Headers({'Content-Type': `application/json`})
     })
-      .then(this._toJSON)
-      .then(PointDataAdapter.parsePoint);
+      .then(Api._toJSON);
   }
 
   updatePoint({id, data}) {
     return this._load({
       url: `points/${id}`,
-      method: this._method.put,
+      method: Api._method().put,
       body: JSON.stringify(data),
       headers: new Headers({'Content-Type': `application/json`})
     })
-      .then(this._toJSON)
-      .then(PointDataAdapter.parsePoint);
+      .then(Api._toJSON)
+      .then(adapter.parsePoint);
   }
 
   deletePoint({id}) {
-    return this._load({url: `points/${id}`, method: this._method.delete});
+    return this._load({url: `points/${id}`, method: Api._method().delete});
   }
 
-  _load({url, method = this._method.get, body = null, headers = new Headers()}) {
+  _load({url, method = Api._method().get, body = null, headers = new Headers()}) {
     headers.append(`Authorization`, this._authorization);
 
     return fetch(`${this._endPoint}/${url}`, {method, body, headers})
-            .then(this._checkStatus)
+            .then(Api._checkStatus)
             .catch((err) => {
               throw err;
             });

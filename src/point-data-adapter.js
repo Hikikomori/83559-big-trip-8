@@ -1,3 +1,5 @@
+import moment from "moment";
+
 class PointDataAdapter {
   constructor(data) {
     this.id = data[`id`];
@@ -8,6 +10,7 @@ class PointDataAdapter {
     this.description = data[`destination`][`description`];
     this.startDateTime = data[`date_from`];
     this.endDateTime = data[`date_to`];
+    this.date = moment(data[`date_from`]).format(`MMM D`);
     this.basePrice = data[`base_price`];
     this.offersPrice = 0;
     this.isFavorite = data[`is_favorite`];
@@ -23,20 +26,20 @@ class PointDataAdapter {
     }
   }
 
-  toRAW() {
+  static toRAW(data) {
     return {
-      'id': this.id,
-      'type': this.type.toLowerCase(),
+      'id': data.id,
+      'type': data.type.toLowerCase(),
       'destination': {
-        'name': this.city,
-        'pictures': this.pictures,
-        'description': this.description,
+        'name': data.city,
+        'pictures': data.pictures,
+        'description': data.description,
       },
-      'offers': this.offers,
-      'date_from': this.startDateTime,
-      'date_to': this.endDateTime,
-      'base_price': this.basePrice,
-      'is_favorite': this.isFavorite,
+      'offers': data.offers,
+      'date_from': data.startDateTime,
+      'date_to': data.endDateTime,
+      'base_price': data.basePrice,
+      'is_favorite': data.isFavorite,
     };
   }
 

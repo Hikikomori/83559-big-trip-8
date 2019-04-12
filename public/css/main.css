@@ -32,6 +32,17 @@
   }
 }
 
+@font-face {
+  font-family: 'Segoe UI Emoji';
+  src: url('../fonts/SegoeUIEmoji.eot');
+  src: local('Segoe UI Emoji'), local('SegoeUIEmoji'),
+  url('../fonts/SegoeUIEmoji.eot?#iefix') format('embedded-opentype'),
+  url('../fonts/SegoeUIEmoji.woff2') format('woff2'),
+  url('../fonts/SegoeUIEmoji.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
 html {
   background: #eee;
   font-family: var(--font);
@@ -111,6 +122,7 @@ a:hover {
   background: #fff;
   border-radius: 50%;
   box-sizing: border-box;
+  font-family: 'Segoe UI Emoji';
   font-style: normal;
   height: 42px;
   line-height: calc(42px - 4px);
@@ -402,9 +414,9 @@ input[type=radio]:checked + .trip-sorting__item {
 .trip-points > .point .point__date {
   display: flex;
 }
-.trip-points > .point .point__input {
+/*.trip-points > .point .point__input {
  border-bottom: 1px solid #0D8AE4;
-}
+}*/
 .point {
   padding: 15px 0;
   background-color: #ffffff;
@@ -663,6 +675,7 @@ input[type=radio]:checked + .trip-sorting__item {
 .statistic {
   padding: 50px 0;
 }
+
 .statistic__item {
   margin-bottom: 95px;
   width: 900px;

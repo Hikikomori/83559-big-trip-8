@@ -83,10 +83,15 @@ class Statistic extends Component {
     this._transportCtx = this._element.querySelector(`.statistic__transport`);
     this._generateChartData();
 
-    this._moneyCtx.height = this._barHeight * this._typesTitles.length;
-    this._transportCtx.height = this._barHeight * this._transportTitles.length;
+    this._moneyCtx.parentNode.style.height = this._barHeight * this._typesTitles.length + `px`;
+    this._transportCtx.parentNode.style.height = this._barHeight * this._transportTitles.length + `px`;
 
     this._moneyChart = new Chart(this._moneyCtx, {
+      defaults: {
+        global: {
+          defaultFontColor: `red`
+        }
+      },
       plugins: [ChartDataLabels],
       type: `horizontalBar`,
       data: {
@@ -99,6 +104,8 @@ class Statistic extends Component {
         }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           datalabels: {
             font: {
@@ -163,6 +170,8 @@ class Statistic extends Component {
         }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           datalabels: {
             font: {
@@ -219,6 +228,8 @@ class Statistic extends Component {
   update(data = this._fullData) {
     this._fullData = data;
     this._generateChartData();
+    this._moneyCtx.parentNode.style.height = this._barHeight * this._typesTitles.length + `px`;
+    this._transportCtx.parentNode.style.height = this._barHeight * this._transportTitles.length + `px`;
     this._moneyChart.data.labels = this._formattedTypesTitles;
     this._moneyChart.data.datasets[0].data = this._typesCosts;
     this._transportChart.data.labels = this._formattedTransportTitles;
