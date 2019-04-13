@@ -1,4 +1,5 @@
 import Component from './component.js';
+import templates from './templates.js';
 
 class Filter extends Component {
   constructor(data) {
@@ -11,9 +12,7 @@ class Filter extends Component {
   }
 
   get template() {
-    return `<span class="filter-wrap">
-  <input type="radio" class="trip-filter__input" id="filter-${this._name.toLowerCase()}" name="filter" value="${this._name.toLowerCase()}" ${this._isChecked ? `checked` : ``}>
-    <label class="trip-filter__item" for="filter-${this._name.toLowerCase()}">${this._name}</label></span>`.trim();
+    return templates.filter(this);
   }
 
   _onFilterClick() {

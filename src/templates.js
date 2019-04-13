@@ -4,6 +4,19 @@ import momentDurationFormatSetup from "moment-duration-format";
 momentDurationFormatSetup(moment);
 
 export default {
+  tripCost(obj) {
+    return `<p class="trip__total">Total: <span class="trip__total-cost">&euro;&nbsp;${obj._cost}</span></p>`.trim();
+  },
+  filter(obj) {
+    return `<span class="filter-wrap">
+    <input type="radio" class="trip-filter__input" id="filter-${obj._name.toLowerCase()}" name="filter" value="${obj._name.toLowerCase()}" ${obj._isChecked ? `checked` : ``}>
+    <label class="trip-filter__item" for="filter-${obj._name.toLowerCase()}">${obj._name}</label></span>`.trim();
+  },
+  sorting(obj) {
+    return `<span class="sorting-wrap">
+    <input type="radio" class="trip-sorting__input" name="trip-sorting" id="sorting-${obj._name.toLowerCase()}" value="${obj._name.toLowerCase()}" ${obj._isChecked ? `checked` : ``}>
+    <label class="trip-sorting__item trip-sorting__item--${obj._name.toLowerCase()}" for="sorting-${obj._name.toLowerCase()}">${obj._name}</label></span>`.trim();
+  },
   point(obj) {
     return `<article class="trip-point">
     <i class="trip-icon">${obj._icons.get(obj._type)}</i>
@@ -158,5 +171,20 @@ export default {
       
       </div>
 </section>`.trim();
+  },
+  statistic() {
+    return `<section class="statistic content-wrap visually-hidden" id="stats">
+    <div class="statistic__item statistic__item--money">
+      <canvas class="statistic__money" width="900"></canvas>
+    </div>
+  
+    <div class="statistic__item statistic__item--transport">
+      <canvas class="statistic__transport" width="900"></canvas>
+    </div>
+  
+    <div class="statistic__item statistic__item--time-spend">
+      <canvas class="statistic__time-spend" width="900"></canvas>
+    </div>
+  </section>`.trim();
   }
 };

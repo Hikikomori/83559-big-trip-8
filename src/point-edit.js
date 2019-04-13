@@ -138,36 +138,7 @@ class PointEdit extends component {
     this._element.classList.remove(`shake`);
   }
 
-  set onSubmit(fn) {
-    this._onSubmit = fn;
-  }
-
-  set onDelete(fn) {
-    this._onDelete = fn;
-  }
-
-  set onEsc(fn) {
-    this._onEsc = fn;
-  }
-
-  get template() {
-    return templates.pointEdit(this);
-  }
-
-
-  createListeners() {
-    this._element.querySelector(`.point__form`)
-      .addEventListener(`submit`, this._onSubmitButtonClick);
-    this._element.querySelector(`.point__form`)
-      .addEventListener(`reset`, this._onDeleteButtonClick);
-    this._element.querySelector(`.point__form`)
-      .addEventListener(`click`, this._onFormClick);
-    this._element.querySelector(`.travel-way__select`)
-      .addEventListener(`click`, this._onChangeType);
-    this._element.querySelector(`.point__destination-input`)
-      .addEventListener(`change`, this._onChangeDest);
-    document.addEventListener(`keydown`, this._onEscPress);
-
+  _setupPickers() {
     const date = this._element.querySelector(`.point__date input`);
     const times = this._element.querySelectorAll(`.point__time input`);
     const datePicker = flatpickr(date, {
@@ -221,6 +192,38 @@ class PointEdit extends component {
         }
       }
     });
+  }
+
+  set onSubmit(fn) {
+    this._onSubmit = fn;
+  }
+
+  set onDelete(fn) {
+    this._onDelete = fn;
+  }
+
+  set onEsc(fn) {
+    this._onEsc = fn;
+  }
+
+  get template() {
+    return templates.pointEdit(this);
+  }
+
+
+  createListeners() {
+    this._element.querySelector(`.point__form`)
+      .addEventListener(`submit`, this._onSubmitButtonClick);
+    this._element.querySelector(`.point__form`)
+      .addEventListener(`reset`, this._onDeleteButtonClick);
+    this._element.querySelector(`.point__form`)
+      .addEventListener(`click`, this._onFormClick);
+    this._element.querySelector(`.travel-way__select`)
+      .addEventListener(`click`, this._onChangeType);
+    this._element.querySelector(`.point__destination-input`)
+      .addEventListener(`change`, this._onChangeDest);
+    document.addEventListener(`keydown`, this._onEscPress);
+    this._setupPickers();
   }
 
   removeListeners() {
