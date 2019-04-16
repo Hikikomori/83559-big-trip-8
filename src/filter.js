@@ -15,12 +15,12 @@ class Filter extends Component {
     return templates.filter(this);
   }
 
-  _onFilterClick() {
-    return typeof this._onFilter === `function` && this._onFilter();
-  }
-
   set onFilter(fn) {
     this._onFilter = fn;
+  }
+
+  _onFilterClick() {
+    return typeof this._onFilter === `function` && this._onFilter();
   }
 
   createListeners() {

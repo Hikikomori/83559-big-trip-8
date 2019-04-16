@@ -12,7 +12,7 @@ import TripDay from './trip-day.js';
 import Point from './point.js';
 import PointEdit from './point-edit.js';
 
-const AUTHORIZATION = `Basic DXN0akbwYXNzd29yZAoDickKickem`;
+const AUTHORIZATION = `Basic DXN0ajbwYXNzd29yZAoDickKickem`;
 const END_POINT = `https://es8-demo-srv.appspot.com/big-trip`;
 
 const mainContainer = document.querySelector(`.main`);
@@ -25,8 +25,8 @@ const sortingContainer = document.querySelector(`.trip-sorting`);
 const pointsContainer = document.querySelector(`.trip-points`);
 const api = new Api(END_POINT, AUTHORIZATION);
 const cost = new TripCost(`###`);
+let activeFilter = `Everything`;
 let activeSorting = `Event`;
-let pointDatasByDate = null;
 let pointDatas = null;
 let statistic = null;
 let statisticContainer = null;
@@ -34,33 +34,35 @@ let availOffers = null;
 let availDests = null;
 let availCities = null;
 
-viewTableBtn.addEventListener(`click`, (evt) => {
+const switchVisibleTab = (evt, show, hide) => {
   evt.preventDefault();
 
-  if (!evt.target.classList.contains(`view-switch__item--active`)) {
-    evt.target.classList.add(`view-switch__item--active`);
-    viewStatsBtn.classList.remove(`view-switch__item--active`);
-    mainContainer.classList.remove(`visually-hidden`);
-    filterContainer.classList.remove(`visually-hidden`);
-    statisticContainer.classList.add(`visually-hidden`);
-  }
+  const Class = {
+    ACTIVE: `view-switch__item--active`,
+    HIDDEN: `visually-hidden`
+  };
 
-  return false;
+  if (!evt.target.classList.contains(Class.ACTIVE)) {
+    evt.target.parentNode.querySelector(`.${Class.ACTIVE}`).classList.remove(Class.ACTIVE);
+    evt.target.classList.add(Class.ACTIVE);
+
+    for (let elem of show) {
+      elem.classList.remove(Class.HIDDEN);
+    }
+
+    for (let elem of hide) {
+      elem.classList.add(Class.HIDDEN);
+    }
+  }
+};
+
+viewTableBtn.addEventListener(`click`, (evt) => {
+  switchVisibleTab(evt, [mainContainer, filterContainer], [statisticContainer]);
 });
 
 viewStatsBtn.addEventListener(`click`, (evt) => {
-  evt.preventDefault();
-
-  if (!evt.target.classList.contains(`view-switch__item--active`)) {
-    evt.target.classList.add(`view-switch__item--active`);
-    viewTableBtn.classList.remove(`view-switch__item--active`);
-    mainContainer.classList.add(`visually-hidden`);
-    filterContainer.classList.add(`visually-hidden`);
-    statisticContainer.classList.remove(`visually-hidden`);
-    statistic.update();
-  }
-
-  return false;
+  switchVisibleTab(evt, [statisticContainer], [mainContainer, filterContainer]);
+  statistic.update();
 });
 
 const findinArray = (data, name) => data.find((elem) => elem.name === name);
@@ -74,8 +76,7 @@ const calculateTripCost = (points) => {
 };
 
 const updatePoints = (points) => {
-  pointDatas = points;
-  pointDatasByDate = groupPointsByDate(sortPointsByDate(points));
+  pointDatas = sortPointsByDate(points);
 };
 
 const generateFilters = (fragment, data) => {
@@ -92,30 +93,41 @@ const generateFilters = (fragment, data) => {
   }
 
   filters.filterEverything.onFilter = () => {
-    renderPoints(pointDatasByDate);
+    renderSortedPoints(activeSorting, filterPoints(`Everything`));
   };
 
   filters.filterFuture.onFilter = () => {
-    let filteredPointDatas = groupPointsByDate(pointDatas.map((pointData) => {
-      if (pointData.startDateTime && pointData.startDateTime > Date.now()) {
-        return pointData;
-      }
-      return null;
-    }));
-
-    renderPoints(filteredPointDatas);
+    renderSortedPoints(activeSorting, filterPoints(`Future`));
   };
 
   filters.filterPast.onFilter = () => {
-    let filteredPointDatas = groupPointsByDate(pointDatas.map((pointData) => {
-      if (pointData.endDateTime && pointData.endDateTime < Date.now()) {
-        return pointData;
-      }
-      return null;
-    }));
-
-    renderPoints(filteredPointDatas);
+    renderSortedPoints(activeSorting, filterPoints(`Past`));
   };
+};
+
+const filterPoints = (filter = activeFilter) => {
+  activeFilter = filter;
+
+  switch (activeFilter) {
+    case `Everything`:
+      return pointDatas;
+    case `Future`:
+      return pointDatas.map((pointData) => {
+        if (pointData.startDateTime && pointData.startDateTime > Date.now()) {
+          return pointData;
+        }
+        return null;
+      });
+    case `Past`:
+      return pointDatas.map((pointData) => {
+        if (pointData.endDateTime && pointData.endDateTime < Date.now()) {
+          return pointData;
+        }
+        return null;
+      });
+  }
+
+  return false;
 };
 
 const generateSortings = (fragment, data) => {
@@ -133,25 +145,25 @@ const generateSortings = (fragment, data) => {
   }
 
   sortings.sortingEvent.onSorting = () => {
-    activeSorting = `Event`;
-    renderSortedPoints();
+    renderSortedPoints(`Event`, filterPoints());
   };
 
   sortings.sortingTime.onSorting = () => {
-    activeSorting = `Time`;
-    renderSortedPoints();
+    renderSortedPoints(`Time`, filterPoints());
   };
 
   sortings.sortingPrice.onSorting = () => {
-    activeSorting = `Price`;
-    renderSortedPoints();
+    renderSortedPoints(`Price`, filterPoints());
   };
 };
 
-const renderSortedPoints = () => {
+const renderSortedPoints = (sorting = activeSorting, points = pointDatas) => {
+  activeSorting = sorting;
+  points = points.filter((elem) => elem);
+
   switch (activeSorting) {
     case `Event`:
-      renderPoints(pointDatasByDate);
+      renderPoints(groupPointsByDate(points));
       break;
     case `Time`:
       renderPoints([
@@ -160,7 +172,7 @@ const renderSortedPoints = () => {
             number: `#`,
             date: ``,
           },
-          points: sortPointsBySpendTime(pointDatas)
+          points: sortPointsBySpendTime(points)
         }
       ]);
       break;
@@ -171,18 +183,68 @@ const renderSortedPoints = () => {
             number: `#`,
             date: ``,
           },
-          points: sortPointsByPrice(pointDatas)
+          points: sortPointsByPrice(points)
         }
       ]);
       break;
   }
 };
 
+const getPointFormParts = (point) => {
+  return {
+    inputs: point.element.querySelectorAll(`.point__form input`),
+    saveBtn: point.element.querySelector(`.point__button--save`),
+    deleteBtn: point.element.querySelector(`.point__button--delete`)
+  };
+};
+
+const disableForm = (point, mode) => {
+  const {inputs, saveBtn, deleteBtn} = getPointFormParts(point);
+
+  for (let item of [...inputs, saveBtn, deleteBtn]) {
+    item.setAttribute(`disabled`, `disabled`);
+  }
+
+  point.removeListeners();
+
+  switch (mode) {
+    case `save`:
+      saveBtn.textContent = `Saving...`;
+      break;
+    case `delete`:
+      deleteBtn.textContent = `Deleting...`;
+      break;
+  }
+};
+
+const enableForm = (point, mode) => {
+  const element = point.element;
+  const {inputs, saveBtn, deleteBtn} = getPointFormParts(point);
+
+  for (let item of [...inputs, saveBtn, deleteBtn]) {
+    item.removeAttribute(`disabled`);
+  }
+
+  point.createListeners();
+
+  switch (mode) {
+    case `save`:
+      saveBtn.textContent = `Save`;
+      break;
+    case `delete`:
+      deleteBtn.textContent = `Delete`;
+      break;
+  }
+
+  element.style.border = `2px solid red`;
+  element.classList.add(`shake`);
+};
+
 const generatePoint = (container, data, isNew) => {
   if (data) {
     let pointData = data;
-    let point = new Point(pointData);
-    let pointEdit = new PointEdit(pointData, availDests, availOffers);
+    const point = new Point(pointData);
+    const pointEdit = new PointEdit(pointData, availDests, availOffers);
 
     if (isNew) {
       container.appendChild(pointEdit.render());
@@ -197,15 +259,11 @@ const generatePoint = (container, data, isNew) => {
     };
 
     pointEdit.onSubmit = (obj) => {
-      const element = pointEdit.element;
-      const form = element.querySelector(`.point__form`);
-      const saveBtn = element.querySelector(`.point__button--save`);
-
-      const editedPointData = Object.assign(pointData, obj);
+      const editedPointData = Object.assign({}, pointData);
+      Object.assign(editedPointData, obj);
 
       if (availCities.includes(editedPointData.city)) {
-        form.setAttribute(`disabled`, `disabled`);
-        saveBtn.textContent = `Saving...`;
+        disableForm(pointEdit, `save`);
 
         if (!isNew) {
           api.updatePoint({id: editedPointData.id, data: Adapter.toRAW(editedPointData)})
@@ -223,49 +281,39 @@ const generatePoint = (container, data, isNew) => {
               return points;
             })
             .then(updatePoints)
+            .then(update)
             .catch(() => {
-              form.removeAttribute(`disabled`);
-              saveBtn.textContent = `Save`;
-              element.style.border = `2px solid red`;
-              element.classList.add(`shake`);
+              enableForm(pointEdit, `save`);
             });
 
           pointEdit.update(pointData);
         } else {
           api.createPoint({point: Adapter.toRAW(editedPointData)})
-            .then(() => api.getPoints())
+            .then((receivedPointData) => {
+              pointDatas.push(receivedPointData);
+              return pointDatas;
+            })
             .then(updatePoints)
             .then(() => pointEdit.unrender())
             .then(update)
             .catch(() => {
-              form.removeAttribute(`disabled`);
-              saveBtn.textContent = `Save`;
-              element.style.border = `2px solid red`;
-              element.classList.add(`shake`);
+              enableForm(pointEdit, `save`);
             });
         }
       } else {
-        element.querySelector(`.point__destination-input`).setCustomValidity(`Please select destination from list`);
+        pointEdit.element.querySelector(`.point__destination-input`).setCustomValidity(`Please select destination from list`);
       }
     };
 
     pointEdit.onDelete = ({id}) => {
-      const element = pointEdit.element;
-      const form = element.querySelector(`.point__form`);
-      const deleteBtn = element.querySelector(`.point__button--delete`);
-
-      form.setAttribute(`disabled`, `disabled`);
-      deleteBtn.textContent = `Deleting...`;
+      disableForm(pointEdit, `delete`);
 
       api.deletePoint({id})
         .then(() => api.getPoints())
         .then(updatePoints)
         .then(update)
         .catch(() => {
-          form.removeAttribute(`disabled`);
-          element.style.border = `2px solid red`;
-          element.classList.add(`shake`);
-          deleteBtn.textContent = `Delete`;
+          enableForm(pointEdit, `delete`);
         });
     };
 
@@ -284,40 +332,28 @@ const generatePoint = (container, data, isNew) => {
 
 const sortPointsByDate = (points) => {
   return points.sort((a, b) => {
-    let result = 0;
     if (a.startDateTime > b.startDateTime) {
-      result = 1;
-    } else {
-      result = -1;
+      return 1;
     }
-
-    return result;
+    return -1;
   });
 };
 
 const sortPointsBySpendTime = (points) => {
   return points.sort((a, b) => {
-    let result = 0;
     if ((a.endDateTime - a.startDateTime) < (b.endDateTime - b.startDateTime)) {
-      result = 1;
-    } else {
-      result = -1;
+      return 1;
     }
-
-    return result;
+    return -1;
   });
 };
 
 const sortPointsByPrice = (points) => {
   return points.sort((a, b) => {
-    let result = 0;
     if ((a.basePrice + a.offersPrice) < (b.basePrice + b.offersPrice)) {
-      result = 1;
-    } else {
-      result = -1;
+      return 1;
     }
-
-    return result;
+    return -1;
   });
 };
 
@@ -340,13 +376,13 @@ const groupPointsByDate = (points) => {
 
 const renderPoints = (data) => {
   pointsContainer.innerHTML = ``;
-  let points = document.createDocumentFragment();
+  const points = document.createDocumentFragment();
   for (let dataPart of data) {
     if (dataPart) {
       const day = new TripDay(dataPart.day);
       points.appendChild(day.render());
 
-      let dayItems = document.createDocumentFragment();
+      const dayItems = document.createDocumentFragment();
       for (let point of dataPart.points) {
         generatePoint(dayItems, point);
       }
@@ -360,7 +396,7 @@ const renderPoints = (data) => {
 
 const load = () => {
   pointsContainer.textContent = ``;
-  renderSortedPoints();
+  renderSortedPoints(activeSorting, filterPoints());
   cost.update(calculateTripCost(pointDatas));
   statistic = new Statistic(pointDatas);
   mainContainer.parentNode.appendChild(statistic.render());
@@ -369,18 +405,18 @@ const load = () => {
 };
 
 const update = () => {
-  renderSortedPoints();
+  renderSortedPoints(activeSorting, filterPoints());
   cost.update(calculateTripCost(pointDatas));
 };
 
 const init = () => {
   costContainer.appendChild(cost.render());
 
-  let filters = document.createDocumentFragment();
+  const filters = document.createDocumentFragment();
   generateFilters(filters, utilityData.filters);
   filterContainer.appendChild(filters);
 
-  let sortings = document.createDocumentFragment();
+  const sortings = document.createDocumentFragment();
   generateSortings(sortings, utilityData.sortings);
   sortingContainer.appendChild(sortings);
 
@@ -389,8 +425,7 @@ const init = () => {
   Promise.all([
     api.getPoints()
       .then((points) => {
-        pointDatasByDate = groupPointsByDate(sortPointsByDate(points));
-        pointDatas = points;
+        pointDatas = sortPointsByDate(points);
       }),
     api.getOffers()
       .then((offers) => {

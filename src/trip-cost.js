@@ -11,15 +11,15 @@ class TripCost extends component {
     return templates.tripCost(this);
   }
 
-  _partialUpdate() {
-    this._elementCopy = this._element;
-    this._element = this.createNode(this.template);
-    this._elementCopy.parentNode.replaceChild(this._element, this._elementCopy);
-  }
-
   update(cost) {
     this._cost = cost;
     this._partialUpdate();
+  }
+
+  _partialUpdate() {
+    this._elementCopy = this._element;
+    this._element = component.createNode(this.template);
+    this._elementCopy.parentNode.replaceChild(this._element, this._elementCopy);
   }
 }
 

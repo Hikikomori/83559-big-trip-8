@@ -1,7 +1,9 @@
 import moment from "moment";
 import momentDurationFormatSetup from "moment-duration-format";
 
+const MAX_VISIBLE_OFFERS_COUNT = 3;
 momentDurationFormatSetup(moment);
+
 
 export default {
   tripCost(obj) {
@@ -33,7 +35,7 @@ export default {
     <p class="trip-point__price">&euro;&nbsp;${obj._basePrice + obj._offersPrice}</p>
     <ul class="trip-point__offers">
       ${Array.from(obj._offers).map((offer, i) => {
-    if (!offer.accepted && i < 3) {
+    if (!offer.accepted && i < MAX_VISIBLE_OFFERS_COUNT) {
       return `
           <li>
             <button class="trip-point__offer">${offer.title} +&euro;&nbsp;${offer.price}</button>
@@ -132,7 +134,7 @@ export default {
   
       <section class="point__details">
         <section class="point__offers">
-          ${obj._offers.length > 0 ? `<h3 class="point__details-title">offers</h3>` : ``}
+          ${obj._offers.length ? `<h3 class="point__details-title">offers</h3>` : ``}
           <div class="point__offers-wrap">
             ${obj._offers.map((offer) => {
     return `<input class="point__offers-input visually-hidden" type="checkbox" id="${offer.title.replace(/\s/g, `_`)}" name="offer" value="${offer.title.replace(/\s/g, `_`)}" ${offer.accepted ? `checked` : ``}>
