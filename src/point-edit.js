@@ -31,6 +31,32 @@ class PointEdit extends component {
     this._onEscPress = this._onEscPress.bind(this);
   }
 
+  set onSubmit(fn) {
+    this._onSubmit = fn;
+  }
+
+  set onDelete(fn) {
+    this._onDelete = fn;
+  }
+
+  set onEsc(fn) {
+    this._onEsc = fn;
+  }
+
+  get template() {
+    return templates.pointEdit(this);
+  }
+
+  update(data) {
+    this._type = data.type;
+    this._city = data.city;
+    this._offers = data.offers;
+    this._startDateTime = data.startDateTime;
+    this._endDateTime = data.endDateTime;
+    this._basePrice = data.basePrice;
+    this._isFavorite = data.isFavorite;
+  }
+
   _onChangeType(evt) {
     if (evt.target.tagName.toLowerCase() === `input`) {
       this._type = evt.target.value;
@@ -75,7 +101,7 @@ class PointEdit extends component {
 
   _partialUpdate() {
     this._elementCopy = this._element;
-    this._element = this.createNode(this.template);
+    this._element = component.createNode(this.template);
     this._elementCopy.parentNode.replaceChild(this._element, this._elementCopy);
   }
 
@@ -194,23 +220,6 @@ class PointEdit extends component {
     });
   }
 
-  set onSubmit(fn) {
-    this._onSubmit = fn;
-  }
-
-  set onDelete(fn) {
-    this._onDelete = fn;
-  }
-
-  set onEsc(fn) {
-    this._onEsc = fn;
-  }
-
-  get template() {
-    return templates.pointEdit(this);
-  }
-
-
   createListeners() {
     this._element.querySelector(`.point__form`)
       .addEventListener(`submit`, this._onSubmitButtonClick);
@@ -238,16 +247,6 @@ class PointEdit extends component {
     this._element.querySelector(`.point__destination-input`)
       .removeEventListener(`change`, this._onChangeDest);
     document.removeEventListener(`keydown`, this._onEscPress);
-  }
-
-  update(data) {
-    this._type = data.type;
-    this._city = data.city;
-    this._offers = data.offers;
-    this._startDateTime = data.startDateTime;
-    this._endDateTime = data.endDateTime;
-    this._basePrice = data.basePrice;
-    this._isFavorite = data.isFavorite;
   }
 
   static createMapper(target) {

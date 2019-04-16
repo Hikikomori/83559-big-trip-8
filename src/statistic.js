@@ -26,57 +26,6 @@ class Statistic extends component {
     this._transportCounts = null;
   }
 
-  _generateChartData() {
-    this._data = this._fullData.filter((elem) => elem);
-    this._types = this._data.map((pointData) => {
-      if (pointData) {
-        return pointData.type;
-      }
-      return ``;
-    });
-
-    this._typesTitles = Array.from(new Set(this._types));
-    this._formattedTypesTitles = this._typesTitles.map((title) => {
-      return `${this._icons.get(title)} ${title.toUpperCase()}`;
-    });
-
-    this._transportTitles = this._typesTitles.map((type) => {
-      if (type !== `Check-in` && type !== `Sightseeing` && type !== `Restaurant`) {
-        return type;
-      }
-      return ``;
-    }).filter((elem) => elem);
-    this._formattedTransportTitles = this._transportTitles.map((title) => {
-      return `${this._icons.get(title)} ${title.toUpperCase()}`;
-    });
-
-    this._typesCosts = this._typesTitles.map((type) => {
-      return this._data.filter((elem) => {
-        return elem.type === type;
-      }).map((elem) => {
-        return elem.basePrice + elem.offersPrice;
-      }).reduce((acc, val) => {
-        return acc + val;
-      });
-    });
-
-    this._typesTimes = this._typesTitles.map((type) => {
-      return Math.round(moment.duration(this._data.filter((elem) => {
-        return elem.type === type;
-      }).map((elem) => {
-        return elem.endDateTime - elem.startDateTime;
-      }).reduce((acc, val) => {
-        return acc + val;
-      })).asHours());
-    });
-
-    this._transportCounts = this._transportTitles.map((transport) => {
-      return this._types.filter((type) => {
-        return type === transport;
-      }).length;
-    });
-  }
-
   get template() {
     return templates.statistic();
   }
@@ -311,6 +260,57 @@ class Statistic extends component {
     this._moneyChart.update();
     this._transportChart.update();
     this._timeSpendChart.update();
+  }
+
+  _generateChartData() {
+    this._data = this._fullData.filter((elem) => elem);
+    this._types = this._data.map((pointData) => {
+      if (pointData) {
+        return pointData.type;
+      }
+      return ``;
+    });
+
+    this._typesTitles = Array.from(new Set(this._types));
+    this._formattedTypesTitles = this._typesTitles.map((title) => {
+      return `${this._icons.get(title)} ${title.toUpperCase()}`;
+    });
+
+    this._transportTitles = this._typesTitles.map((type) => {
+      if (type !== `Check-in` && type !== `Sightseeing` && type !== `Restaurant`) {
+        return type;
+      }
+      return ``;
+    }).filter((elem) => elem);
+    this._formattedTransportTitles = this._transportTitles.map((title) => {
+      return `${this._icons.get(title)} ${title.toUpperCase()}`;
+    });
+
+    this._typesCosts = this._typesTitles.map((type) => {
+      return this._data.filter((elem) => {
+        return elem.type === type;
+      }).map((elem) => {
+        return elem.basePrice + elem.offersPrice;
+      }).reduce((acc, val) => {
+        return acc + val;
+      });
+    });
+
+    this._typesTimes = this._typesTitles.map((type) => {
+      return Math.round(moment.duration(this._data.filter((elem) => {
+        return elem.type === type;
+      }).map((elem) => {
+        return elem.endDateTime - elem.startDateTime;
+      }).reduce((acc, val) => {
+        return acc + val;
+      })).asHours());
+    });
+
+    this._transportCounts = this._transportTitles.map((transport) => {
+      return this._types.filter((type) => {
+        return type === transport;
+      }).length;
+    });
   }
 }
 

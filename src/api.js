@@ -1,35 +1,14 @@
 import adapter from './point-data-adapter.js';
 
-const HTTP_CODES = {
-  success: 200,
-  redirect: 300
+const HttpCode = {
+  SUCCESS: 200,
+  REDIRECT: 300
 };
 
 class Api {
   constructor(endPoint, authorization) {
     this._endPoint = endPoint;
     this._authorization = authorization;
-  }
-
-  static _checkStatus(response) {
-    if (response.status >= HTTP_CODES.success && response.status < HTTP_CODES.redirect) {
-      return response;
-    } else {
-      throw new Error(`${response.status}: ${response.statusText}`);
-    }
-  }
-
-  static _toJSON(response) {
-    return response.json();
-  }
-
-  static _method() {
-    return {
-      get: `GET`,
-      post: `POST`,
-      put: `PUT`,
-      delete: `DELETE`
-    };
   }
 
   getPoints() {
@@ -51,17 +30,18 @@ class Api {
   createPoint({point}) {
     return this._load({
       url: `points`,
-      method: Api._method().post,
+      method: Api._method().POST,
       body: JSON.stringify(point),
       headers: new Headers({'Content-Type': `application/json`})
     })
-      .then(Api._toJSON);
+      .then(Api._toJSON)
+      .then(adapter.parsePoint);
   }
 
   updatePoint({id, data}) {
     return this._load({
       url: `points/${id}`,
-      method: Api._method().put,
+      method: Api._method().PUT,
       body: JSON.stringify(data),
       headers: new Headers({'Content-Type': `application/json`})
     })
@@ -70,17 +50,38 @@ class Api {
   }
 
   deletePoint({id}) {
-    return this._load({url: `points/${id}`, method: Api._method().delete});
+    return this._load({url: `points/${id}`, method: Api._method().DELETE});
   }
 
-  _load({url, method = Api._method().get, body = null, headers = new Headers()}) {
+  _load({url, method = Api._method().GET, body = null, headers = new Headers()}) {
     headers.append(`Authorization`, this._authorization);
 
     return fetch(`${this._endPoint}/${url}`, {method, body, headers})
-            .then(Api._checkStatus)
-            .catch((err) => {
-              throw err;
-            });
+      .then(Api._checkStatus)
+      .catch((err) => {
+        throw err;
+      });
+  }
+
+  static _checkStatus(response) {
+    if (response.status >= HttpCode.SUCCESS && response.status < HttpCode.REDIRECT) {
+      return response;
+    }
+
+    throw new Error(`${response.status}: ${response.statusText}`);
+  }
+
+  static _toJSON(response) {
+    return response.json();
+  }
+
+  static _method() {
+    return {
+      GET: `GET`,
+      POST: `POST`,
+      PUT: `PUT`,
+      DELETE: `DELETE`
+    };
   }
 }
 

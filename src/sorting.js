@@ -15,12 +15,12 @@ class Sorting extends component {
     return templates.sorting(this);
   }
 
-  _onSortingClick() {
-    return typeof this._onSorting === `function` && this._onSorting();
-  }
-
   set onSorting(fn) {
     this._onSorting = fn;
+  }
+
+  _onSortingClick() {
+    return typeof this._onSorting === `function` && this._onSorting();
   }
 
   createListeners() {

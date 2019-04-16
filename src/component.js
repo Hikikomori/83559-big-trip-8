@@ -27,18 +27,12 @@ class Component {
     throw new Error(`You have to define template.`);
   }
 
-  createNode(template) {
-    const container = document.createElement(`div`);
-    container.insertAdjacentHTML(`beforeend`, template);
-    return container.firstChild;
-  }
-
   createListeners() {}
 
   removeListeners() {}
 
   render() {
-    this._element = this.createNode(this.template);
+    this._element = Component.createNode(this.template);
     this.createListeners();
     return this._element;
   }
@@ -47,6 +41,12 @@ class Component {
     this.removeListeners();
     this._element.remove();
     this._element = null;
+  }
+
+  static createNode(template) {
+    const container = document.createElement(`div`);
+    container.insertAdjacentHTML(`beforeend`, template);
+    return container.firstChild;
   }
 }
 
