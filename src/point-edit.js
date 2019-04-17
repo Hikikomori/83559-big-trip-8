@@ -230,7 +230,7 @@ class PointEdit extends component {
     this._element.querySelector(`.travel-way__select`)
       .addEventListener(`click`, this._onChangeType);
     this._element.querySelector(`.point__destination-input`)
-      .addEventListener(`change`, this._onChangeDest);
+      .addEventListener(`input`, this._onChangeDest);
     document.addEventListener(`keydown`, this._onEscPress);
     this._setupPickers();
   }
@@ -245,7 +245,7 @@ class PointEdit extends component {
     this._element.querySelector(`.travel-way__select`)
       .removeEventListener(`click`, this._onChangeType);
     this._element.querySelector(`.point__destination-input`)
-      .removeEventListener(`change`, this._onChangeDest);
+      .removeEventListener(`input`, this._onChangeDest);
     document.removeEventListener(`keydown`, this._onEscPress);
   }
 
