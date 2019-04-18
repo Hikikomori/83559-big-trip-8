@@ -113,17 +113,11 @@ const filterPoints = (filter = activeFilter) => {
       return pointDatas;
     case `Future`:
       return pointDatas.map((pointData) => {
-        if (pointData.startDateTime && pointData.startDateTime > Date.now()) {
-          return pointData;
-        }
-        return null;
+        return pointData.startDateTime && pointData.startDateTime > Date.now() ? pointData : null;
       });
     case `Past`:
       return pointDatas.map((pointData) => {
-        if (pointData.endDateTime && pointData.endDateTime < Date.now()) {
-          return pointData;
-        }
-        return null;
+        return pointData.endDateTime && pointData.endDateTime < Date.now() ? pointData : null;
       });
   }
 
@@ -332,28 +326,19 @@ const generatePoint = (container, data, isNew) => {
 
 const sortPointsByDate = (points) => {
   return points.sort((a, b) => {
-    if (a.startDateTime > b.startDateTime) {
-      return 1;
-    }
-    return -1;
+    return a.startDateTime > b.startDateTime ? 1 : -1;
   });
 };
 
 const sortPointsBySpendTime = (points) => {
   return points.sort((a, b) => {
-    if ((a.endDateTime - a.startDateTime) < (b.endDateTime - b.startDateTime)) {
-      return 1;
-    }
-    return -1;
+    return (a.endDateTime - a.startDateTime) < (b.endDateTime - b.startDateTime) ? 1 : -1;
   });
 };
 
 const sortPointsByPrice = (points) => {
   return points.sort((a, b) => {
-    if ((a.basePrice + a.offersPrice) < (b.basePrice + b.offersPrice)) {
-      return 1;
-    }
-    return -1;
+    return (a.basePrice + a.offersPrice) < (b.basePrice + b.offersPrice) ? 1 : -1;
   });
 };
 
